@@ -15,14 +15,17 @@ const ID_GROUND    = 'orbitscope-ground-track';
 
 /**
  * Initialize a Cesium Viewer inside the given container element.
- * Uses bundled Natural Earth II imagery — no Ion token required.
+ * Uses OpenStreetMap imagery — no Ion token required, includes borders + labels.
  * @param {string} containerId
  * @returns {Cesium.Viewer}
  */
 export function initViewer(containerId) {
   const viewer = new C.Viewer(containerId, {
-    imageryProvider: new C.TileMapServiceImageryProvider({
-      url: C.buildModuleUrl('Assets/Textures/NaturalEarthII'),
+    imageryProvider: new C.UrlTemplateImageryProvider({
+      url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      credit: '\u00a9 OpenStreetMap contributors',
+      minimumLevel: 0,
+      maximumLevel: 19,
     }),
     baseLayerPicker:       false,
     geocoder:              false,
@@ -37,11 +40,8 @@ export function initViewer(containerId) {
     creditContainer:       document.createElement('div'), // hide credit
   });
 
-  // Dark space background
+  // Dark space background for the sky beyond the globe
   viewer.scene.backgroundColor = C.Color.fromCssColorString('#0a0e1a');
-  viewer.scene.globe.baseColor  = C.Color.fromCssColorString('#0e1520');
-
-  // Atmosphere and fog — subtle space feel
   viewer.scene.globe.showGroundAtmosphere = true;
   viewer.scene.skyAtmosphere.show         = true;
   viewer.scene.fog.enabled                = false;
@@ -110,7 +110,14 @@ export function updateSatelliteMarker(viewer, position, name) {
   }
 }
 
-// ─── Orbit Path ──────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Return true only if all three Cartesian3 components are finite numbers. */
+function isValidPos(c) {
+  return c && isFinite(c.x) && isFinite(c.y) && isFinite(c.z);
+}
+
+// ── Orbit Path ──────────────────────────────────────────────────────────────
 
 /**
  * Draw (or redraw) the orbit path polyline.
@@ -120,7 +127,8 @@ export function updateSatelliteMarker(viewer, position, name) {
 export function updateOrbitPath(viewer, samples) {
   const positions = samples
     .filter(Boolean)
-    .map(s => toCartesian(s.lat, s.lon, s.altKm));
+    .map(s => toCartesian(s.lat, s.lon, s.altKm))
+    .filter(isValidPos);
 
   if (positions.length < 2) return;
 
@@ -152,7 +160,8 @@ export function updateOrbitPath(viewer, samples) {
 export function updateGroundTrack(viewer, samples) {
   const positions = samples
     .filter(Boolean)
-    .map(s => C.Cartesian3.fromDegrees(s.lon, s.lat, 0));
+    .map(s => C.Cartesian3.fromDegrees(s.lon, s.lat, 0))
+    .filter(isValidPos);
 
   if (positions.length < 2) return;
 

@@ -75,20 +75,32 @@ export function sampleOrbitPath(satrec, centerDate) {
 
 /**
  * Generate a full (360°) orbit path by stepping through one orbital period.
- * Uses an estimated period derived from mean motion.
+ * satrec.no is mean motion in rad/min (satellite.js v4 standard field).
  * @param {object} satrec
  * @param {Date} startDate
  * @returns {Array<{ lat, lon, altKm, eci, vel } | null>}
  */
 export function sampleFullOrbit(satrec, startDate) {
-  // Mean motion is in revolutions/day — invert to get period in minutes
-  const periodMin = 1440 / satrec.no_kozai * (2 * Math.PI);
-  const stepMs = (periodMin * 60 * 1000) / TIMELINE.orbitSamples;
-  const results = [];
+  // satrec.no is mean motion in radians/minute
+  // Period (minutes) = 2π / no
+  const no = satrec.no || satrec.no_kozai;
+  if (!no || no <= 0 || !isFinite(no)) {
+    console.warn('[propagation] invalid mean motion, cannot sample orbit');
+    return [];
+  }
+  const periodMin = (2 * Math.PI) / no;       // ~93 min for ISS
+  const stepMs    = (periodMin * 60 * 1000) / TIMELINE.orbitSamples;
+  const results   = [];
 
   for (let i = 0; i <= TIMELINE.orbitSamples; i++) {
     const t = new Date(startDate.getTime() + i * stepMs);
-    results.push(propagate(satrec, t));
+    if (isNaN(t.getTime())) continue;           // skip bad timestamps
+    const pos = propagate(satrec, t);
+    if (pos && isFinite(pos.lat) && isFinite(pos.lon) && isFinite(pos.altKm)) {
+      results.push(pos);
+    } else {
+      results.push(null);
+    }
   }
   return results;
 }
