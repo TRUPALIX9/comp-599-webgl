@@ -1,6 +1,7 @@
 import { FreeCamera, Scene, ShadowGenerator, Vector3 } from "../core/Babylon";
 import { GameConfig } from "../config/GameConfig";
 import { Enemy } from "../entities/enemies/Enemy";
+import { AIPlane } from "../entities/enemies/AIPlane";
 import { PencilMissile } from "../entities/projectiles/PencilMissile";
 import { Projectile } from "../entities/projectiles/Projectile";
 import { Pickup } from "../entities/pickups/Pickup";
@@ -8,6 +9,7 @@ import { PlayerPlane } from "../entities/player/PlayerPlane";
 import { createEnemyInkMesh, createEnemyMesh, createPaperPlaneMesh, createPickupMesh } from "../scene/MeshFactory";
 import type { GameMaterials } from "../scene/Materials";
 import { CampusBuilder } from "../scene/CampusBuilder";
+import { ArenaBattleBuilder } from "../scene/ArenaBattleBuilder";
 import type { CollisionBody, EnemyKind, PickupKind, PlayerSnapshot, WorldContext } from "../types/GameTypes";
 import { clamp01 } from "../utils/MathUtils";
 import { AudioSystem } from "../systems/audio/AudioSystem";
@@ -33,10 +35,12 @@ const wavePlan: EnemyKind[][] = [
   ["boss"]
 ];
 
-export type WorldMode = "exploration" | "combat";
+export type WorldMode = "exploration" | "combat" | "arena";
 
 export class GameWorld {
   private mode: WorldMode = "combat";
+  private aiPlane: AIPlane | null = null;
+  private aiVictoryTriggered = false;
   readonly player: PlayerPlane;
   readonly effects: VisualEffectsSystem;
   private readonly cameraController: FollowCameraController;
@@ -59,6 +63,7 @@ export class GameWorld {
     private readonly audio: AudioSystem,
     private readonly callbacks: WorldCallbacks
   ) {
+    // Build environment based on mode (mode may be set before world is created)
     const environment = new CampusBuilder(scene, materials, shadowGenerator).build();
     this.obstacleBodies = environment.obstacleBodies;
     const playerNode = createPaperPlaneMesh(scene, materials);
@@ -75,6 +80,18 @@ export class GameWorld {
       this.player.health = 9999;
     } else {
       this.player.health = GameConfig.player.maxHealth;
+    }
+    if (mode === "arena") {
+      // Rebuild environment as arena
+      const arena = new ArenaBattleBuilder(this.scene, this.materials, this.shadowGenerator).build();
+      this.obstacleBodies.length = 0;
+      arena.obstacleBodies.forEach(b => this.obstacleBodies.push(b));
+      // Spawn AI opponent
+      const aiNode = createPaperPlaneMesh(this.scene, this.materials);
+      // Tint AI plane red for distinction
+      aiNode.getChildMeshes().forEach(m => { if (m.material) m.material = this.materials.enemyInk; });
+      this.aiPlane = new AIPlane(aiNode);
+      this.aiVictoryTriggered = false;
     }
   }
 
@@ -100,9 +117,24 @@ export class GameWorld {
       (cue) => this.audio.play(cue)
     );
 
-    if (this.mode === "combat") {
-      this.spawnWaves();
+    if (this.mode === "combat") { this.spawnWaves(); }
+
+    // Arena mode: update AI plane
+    if (this.mode === "arena" && this.aiPlane?.alive) {
+      this.aiPlane.update(dt, this.player, (pos, dir) => {
+        const node = createEnemyInkMesh(this.scene, this.materials);
+        node.position.copyFrom(pos);
+        this.enemyProjectiles.push(new Projectile(
+          node,
+          GameConfig.weapons.enemyInk.radius,
+          "enemy",
+          GameConfig.weapons.enemyInk.damage,
+          GameConfig.weapons.enemyInk.lifeSeconds,
+          dir.normalize().scale(GameConfig.weapons.enemyInk.speed)
+        ));
+      });
     }
+
     const context = this.createContext();
     for (const enemy of this.enemies) enemy.update(dt, context);
     for (const projectile of this.playerProjectiles) projectile.update(dt, context);
@@ -111,6 +143,25 @@ export class GameWorld {
     for (const pickup of this.pickups) pickup.update(dt, context);
 
     this.handleCollisions(context);
+
+    // Arena: check AI collision with player projectiles
+    if (this.mode === "arena" && this.aiPlane?.alive) {
+      for (const proj of this.playerProjectiles) {
+        if (!proj.alive) continue;
+        if (CollisionSystem.overlaps(proj.position, proj.radius, this.aiPlane.position, 5)) {
+          proj.alive = false;
+          const killed = this.aiPlane.damage(proj.damage);
+          this.effects.burst(this.aiPlane.position, "enemy", 1.2);
+          this.audio.play("damage");
+          if (killed) {
+            this.score += 500;
+            this.effects.burst(this.aiPlane.position, "missile", 2.5);
+            this.audio.play("explosion");
+          }
+        }
+      }
+    }
+
     this.pruneDead();
     this.effects.update(dt);
     this.cameraController.update(dt, this.player);
@@ -118,7 +169,15 @@ export class GameWorld {
     if (this.player.health <= 0) {
       this.callbacks.onGameOver();
     }
-    if (!this.victoryTriggered && this.player.position.z >= GameConfig.world.finishZ && this.enemies.length === 0 && this.waveIndex >= wavePlan.length - 1) {
+
+    // Arena: AI defeated = victory; player defeated = game over (already handled above)
+    if (this.mode === "arena" && !this.aiVictoryTriggered && this.aiPlane && !this.aiPlane.alive) {
+      this.aiVictoryTriggered = true;
+      this.callbacks.onVictory();
+    }
+
+    // Combat mode victory
+    if (this.mode === "combat" && !this.victoryTriggered && this.player.position.z >= GameConfig.world.finishZ && this.enemies.length === 0 && this.waveIndex >= wavePlan.length - 1) {
       this.victoryTriggered = true;
       this.callbacks.onVictory();
     }

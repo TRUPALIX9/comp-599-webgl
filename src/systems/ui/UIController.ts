@@ -7,8 +7,10 @@ interface UIHandlers {
   onRestart(): void;
   onSelectCampus(): void;
   onSelectGame(): void;
+  onSelectArena(): void;
   onBackToMenu(): void;
 }
+
 
 
 export class UIController {
@@ -118,14 +120,20 @@ export class UIController {
           <div class="selection-grid">
             <div class="selection-card">
               <div class="icon">&#x1F3DB;&#xFE0F;</div>
-              <h2>Explore Campus</h2>
-              <p>A peaceful bird's-eye flight over the CSUCI campus. No enemies &mdash; just architecture and atmosphere.</p>
-              <button class="ui-button" id="btn-campus" data-action="campus">Go to Campus</button>
+              <h2>CSUCI Campus</h2>
+              <p>A dedicated 3D campus explorer. Fly freely over buildings, the Bell Tower, Broome Library, and the University Mall. No combat &mdash; just the campus.</p>
+              <button class="ui-button" id="btn-campus" data-action="campus">Explore Campus</button>
+            </div>
+            <div class="selection-card">
+              <div class="icon">&#x2694;&#xFE0F;</div>
+              <h2>Plane vs AI</h2>
+              <p>1-vs-1 arena battle against an AI opponent in a square arena filled with detailed obstacles: books, bags, tables, lamps, pipes, and water bottles.</p>
+              <button class="ui-button" id="btn-arena" data-action="arena">Fight AI</button>
             </div>
             <div class="selection-card">
               <div class="icon">&#x2708;&#xFE0F;</div>
-              <h2>Plane Assault</h2>
-              <p>Full combat. Fight through 6 enemy waves across the campus skyline and reach the south finish gate.</p>
+              <h2>Paper Plane Assault</h2>
+              <p>Classic wave combat over the campus. Fight foldlings, darts, gliders, and the boss kite across 6 waves.</p>
               <button class="ui-button" id="btn-game" data-action="game">Start Mission</button>
             </div>
             <div class="selection-card">
@@ -139,6 +147,12 @@ export class UIController {
               <h2>Situation Display Lab</h2>
               <p>A simulated data stream drives a WebGL terrain view, 2D map, entity tracks, layer controls, and replay.</p>
               <button class="ui-button" id="btn-situation" data-action="situation">Open Lab</button>
+            </div>
+            <div class="selection-card">
+              <div class="icon">&#x1F6F0;&#xFE0F;</div>
+              <h2>OrbitScope</h2>
+              <p>Real-time 3D satellite tracker. Search any satellite, visualize its orbit, and scrub through time.</p>
+              <button class="ui-button" id="btn-orbit" data-action="orbit">Launch Tracker</button>
             </div>
           </div>
         </div>`;
@@ -170,9 +184,11 @@ export class UIController {
         if (action === "restart") this.handlers.onRestart();
         if (action === "campus") this.handlers.onSelectCampus();
         if (action === "game") this.handlers.onSelectGame();
+        if (action === "arena") this.handlers.onSelectArena();
         if (action === "menu") this.handlers.onBackToMenu();
         if (action === "city") window.open("webgl-showcase/city-roaming/index.html", "_blank");
         if (action === "situation") window.open("webgl-showcase/situation-display/index.html", "_blank");
+        if (action === "orbit") window.open("orbit-scope/index.html", "_blank");
       });
     });
   }

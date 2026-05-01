@@ -34,6 +34,7 @@ export class GameApp {
       onRestart: () => void this.restart(),
       onSelectCampus: () => this.selectMode("exploration"),
       onSelectGame: () => this.selectMode("combat"),
+      onSelectArena: () => this.selectMode("arena"),
       onBackToMenu: () => this.setState("menu")
     });
 
@@ -69,7 +70,7 @@ export class GameApp {
     this.engine.dispose();
   }
 
-  private selectMode(mode: "exploration" | "combat"): void {
+  private selectMode(mode: "exploration" | "combat" | "arena"): void {
     this.audio.play("ui");
     this.world.setMode(mode);
     this.setState("title");
