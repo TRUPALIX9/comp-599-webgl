@@ -1,0 +1,20 @@
+import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
+import "@babylonjs/core/Shaders/depthBoxBlur.fragment";
+import "@babylonjs/core/Shaders/postprocess.vertex";
+import "@babylonjs/core/Shaders/shadowMap.fragment";
+import "@babylonjs/core/Shaders/shadowMap.vertex";
+
+export { Engine } from "@babylonjs/core/Engines/engine";
+export { Scene } from "@babylonjs/core/scene";
+export { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+export { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
+export { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+export { ShadowGenerator } from "@babylonjs/core/Lights/Shadows/shadowGenerator";
+export { Color3 } from "@babylonjs/core/Maths/math.color";
+export { Scalar } from "@babylonjs/core/Maths/math.scalar";
+export { Vector3 } from "@babylonjs/core/Maths/math.vector";
+export { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+export { Mesh } from "@babylonjs/core/Meshes/mesh";
+export { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+export { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+export { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";

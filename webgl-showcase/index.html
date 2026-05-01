@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WebGL Capability Showcase</title>
+  <style>
+    :root {
+      --paper: #f8f5ee;
+      --ink: #16201c;
+      --muted: #66716b;
+      --line: #d8d0c2;
+      --green: #2f8f6f;
+      --amber: #c77932;
+      --blue: #386f9f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Avenir Next, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    main {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(280px, 0.85fr) minmax(340px, 1.15fr);
+      gap: 0;
+    }
+
+    .intro {
+      padding: clamp(28px, 5vw, 72px);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100vh;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .eyebrow::before {
+      content: "";
+      display: block;
+      width: 12px;
+      height: 12px;
+      background: var(--green);
+    }
+
+    h1 {
+      margin: 54px 0 18px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(46px, 7vw, 88px);
+      line-height: 0.96;
+      letter-spacing: 0;
+      max-width: 720px;
+    }
+
+    .summary {
+      max-width: 620px;
+      color: #44504a;
+      font-size: clamp(16px, 1.6vw, 21px);
+      line-height: 1.45;
+    }
+
+    .source-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 56px;
+    }
+
+    .source {
+      border-top: 2px solid var(--ink);
+      padding-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .source strong {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      font-family: Georgia, "Times New Roman", serif;
+      margin-bottom: 6px;
+    }
+
+    .projects {
+      padding: clamp(22px, 4vw, 56px);
+      display: grid;
+      gap: 22px;
+      align-content: center;
+    }
+
+    .project {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 160px;
+      gap: 24px;
+      min-height: 248px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      text-decoration: none;
+      color: inherit;
+      border-radius: 8px;
+      transition: transform 160ms ease, border-color 160ms ease;
+      overflow: hidden;
+    }
+
+    .project:hover,
+    .project:focus-visible {
+      transform: translateY(-2px);
+      border-color: var(--green);
+      outline: none;
+    }
+
+    .project h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(27px, 3vw, 44px);
+      line-height: 1.03;
+      letter-spacing: 0;
+    }
+
+    .project p {
+      max-width: 520px;
+      margin: 16px 0 0;
+      color: #4e5a54;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+
+    .tag {
+      border: 1px solid var(--line);
+      padding: 6px 9px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 999px;
+      background: #faf6ed;
+    }
+
+    .viz {
+      position: relative;
+      min-height: 172px;
+      align-self: stretch;
+      border-left: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+    }
+
+    .city-viz,
+    .ops-viz {
+      width: 128px;
+      height: 128px;
+      position: relative;
+    }
+
+    .city-viz span {
+      position: absolute;
+      bottom: 8px;
+      width: 18px;
+      background: var(--blue);
+      transform: skewY(-12deg);
+    }
+
+    .city-viz span:nth-child(1) { left: 14px; height: 58px; background: var(--green); }
+    .city-viz span:nth-child(2) { left: 42px; height: 94px; }
+    .city-viz span:nth-child(3) { left: 70px; height: 72px; background: var(--amber); }
+    .city-viz span:nth-child(4) { left: 98px; height: 108px; background: #314a3f; }
+
+    .city-viz::before {
+      content: "";
+      position: absolute;
+      inset: 10px 0 auto 0;
+      height: 88px;
+      border-top: 2px solid var(--green);
+      border-left: 2px solid var(--green);
+      transform: perspective(180px) rotateX(52deg) rotateZ(-28deg);
+      opacity: 0.7;
+    }
+
+    .ops-viz {
+      border: 1px solid var(--line);
+      border-radius: 50%;
+    }
+
+    .ops-viz::before,
+    .ops-viz::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+    }
+
+    .ops-viz::before { inset: 28px; }
+    .ops-viz::after { inset: 54px; background: var(--green); border-color: var(--green); }
+
+    .dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+
+    .dot:nth-child(1) { top: 20px; left: 74px; }
+    .dot:nth-child(2) { top: 74px; left: 26px; background: var(--blue); }
+    .dot:nth-child(3) { top: 92px; left: 92px; background: var(--green); }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      .intro { min-height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .source-strip { grid-template-columns: 1fr; }
+      .project { grid-template-columns: 1fr; }
+      .viz { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="intro">
+      <div>
+        <div class="eyebrow">WebGL Seminar</div>
+        <h1>Browser-native 3D, made visible.</h1>
+        <p class="summary">A source-backed showcase for WebGL: one project exposes the rendering pipeline behind city-scale scenes, and one project turns WebGL into a real-time operational display.</p>
+      </div>
+      <div class="source-strip" aria-label="Source papers">
+        <div class="source"><strong>Campus</strong>Browser access, camera modes, object info, usability.</div>
+        <div class="source"><strong>Geographic</strong>glTF, prefetching, frustum culling, 36 fps case result.</div>
+        <div class="source"><strong>Situation</strong>SOA, 2D/3D linkage, WebGL2, Cesium, services.</div>
+      </div>
+    </section>
+    <section class="projects" aria-label="Projects">
+      <a class="project" href="city-roaming/index.html">
+        <div>
+          <h2>Predictive City Roaming Lab</h2>
+          <p>Navigate a generated city while the renderer reports visible buildings, culled geometry, tile cache state, and predicted prefetch targets.</p>
+          <div class="tags">
+            <span class="tag">WebGL shaders</span>
+            <span class="tag">Frustum culling</span>
+            <span class="tag">Tile cache</span>
+            <span class="tag">Prefetch queue</span>
+          </div>
+        </div>
+        <div class="viz" aria-hidden="true"><div class="city-viz"><span></span><span></span><span></span><span></span></div></div>
+      </a>
+      <a class="project" href="situation-display/index.html">
+        <div>
+          <h2>2D/3D Situation Display Lab</h2>
+          <p>Watch a simulated data stream drive a WebGL terrain view, synchronized 2D map, entity tracks, layer controls, and replay timeline.</p>
+          <div class="tags">
+            <span class="tag">2D/3D linkage</span>
+            <span class="tag">Live data bus</span>
+            <span class="tag">Layers</span>
+            <span class="tag">Replay</span>
+          </div>
+        </div>
+        <div class="viz" aria-hidden="true"><div class="ops-viz"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
+      </a>
+    </section>
+  </main>
+</body>
+</html>
