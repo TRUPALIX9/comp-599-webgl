@@ -1,141 +1,96 @@
-# COMP-599 WebGL Seminar — CSUCI Campus & Paper Plane Assault
+# COMP 599 WebGL Seminar Showcase
 
-A browser-native WebGL project for COMP-599 Seminar. Built with **TypeScript + Vite + Babylon.js**, it merges two interactive experiences into one unified launcher:
+This repository contains one integrated **Next.js WebGL showcase** for the COMP 599 research summary and presentation on browser-based 3D visualization.
 
-1. **Paper Plane Assault** — arcade combat flight game set over the CSUCI campus
-2. **Explore Campus** — peaceful bird's-eye exploration of the CSUCI master plan in 3D
-3. **Predictive City Roaming Lab** — WebGL rendering pipeline showcase (frustum culling, tile cache)
-4. **2D/3D Situation Display Lab** — live data-driven operational display with terrain and entity tracks
+## What Is Included
 
----
+- `app/page.tsx` — the single interactive WebGL showcase page.
+- `app/globals.css` — the full visual system for the showcase.
+- `package.json` — Next.js project scripts and dependencies.
+- `docs/` — the seminar paper DOCX and presentation PPTX.
+- `references/` — the three source PDFs used by the paper and presentation.
 
-## Quick Start
+## WebGL Modules
+
+- **Highway Sim** is the final polished demo: a three-lane highway with buildings, moving vehicles, lane switching, and collision detection.
+- **Bunker Sim** is a game-style entity demo: spawned entities move through a bunker scene, click picking acts like a raycast, and the UI tracks health, hits, and active entities.
+- **Pipeline** explains the CPU/GPU split in WebGL. Use this as the short live demo after introducing what WebGL does.
+- **City Roaming** demonstrates city-scale rendering ideas such as culling, visible working sets, and request queues.
+- **Situation Display** demonstrates a 2D/3D operational display with layers, simulated live entities, a linked map, and replay-style state.
+
+All modules are combined into one Next.js page. The first screen offers two primary demo choices: **Highway Obstacle Simulation** and **Bunker Entity Simulation**.
+
+## Highway Demo Plan
+
+The highway scene is intentionally scoped for a 3-minute presentation demo. It shows the most important WebGL ideas without turning into a full game.
+
+- World scale: `1 WebGL unit = about 1 meter`.
+- Highway orientation: the road runs forward on the `Z` axis; left/right movement uses the `X` axis.
+- Lanes: `3` lanes, each `3.7m` wide.
+- Road width: `14.3m`, including shoulders.
+- Player car: `1.9m` wide, `1.45m` high, `4.6m` long.
+- Sedan obstacles: `1.9m x 1.45m x 4.6m`.
+- Truck obstacles: `2.35m x 2.75m x 6.8m`.
+- Bus obstacles: `2.55m x 3.1m x 9.2m`.
+- Buildings: placed on both sides of the highway, set back from the road edge by about `11m-18m`.
+- Building orientation: most buildings are parallel to the highway; some rotate perpendicular to create city-block variation.
+- Building height: about `8m-42m`, so the street feels urban but still readable.
+- Collision logic: simple 2D bounding-box checks on `X/Z` position.
+- Controls: use the left/right lane buttons, or keyboard `A/D` and arrow keys.
+
+The current scene uses procedural WebGL boxes instead of GLB assets because no `.glb` files are present in the project. Real car or building GLB files can replace these boxes later while keeping the same size/orientation rules.
+
+## Bunker Demo Plan
+
+The bunker scene is the more game-like option. Keep the framing professional: it is an entity simulation for WebGL interaction, not a realistic combat game.
+
+- Scene: fixed player camera inside a simple bunker room.
+- Spawns: entities appear from `5` doorway positions.
+- Movement: each entity moves toward the player position.
+- Interaction: clicking the canvas performs a projected picking/raycast-style hit test.
+- Feedback: hit entities dissolve/respawn; no gore or realistic weapon effects.
+- Metrics: health, hits, active entities, and FPS.
+- Controls: click the canvas to target entities, or use the side-panel pulse/reset buttons.
+
+## Asset Wishlist
+
+The project works without external models, but these files would make it look much better:
+
+- `vehicle-sedan.glb`, `vehicle-truck.glb`, and `vehicle-bus.glb` for the highway demo.
+- `building-lowrise.glb` and `building-midrise.glb` for city-side buildings.
+- `bunker-room.glb` or modular wall/door pieces for the bunker.
+- `entity-zombie-stylized.glb` or `entity-training-bot.glb` for the spawned characters.
+- Optional simple animations: `walk`, `hit`, and `idle`.
+
+Put models under `public/models/` with clean lowercase names. If models are repeated, keep one good copy and name variants with `-01`, `-02`, etc.
+
+## Local Use
+
+Install dependencies once:
 
 ```bash
 npm install
+```
+
+Run the development server:
+
+```bash
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173` (or the URL printed by Vite). You will land on the **main selection screen** — pick any of the four experiences.
+Then open the local Next.js URL, usually `http://127.0.0.1:3000/`.
 
-Build for production:
+## Vercel Deployment
 
-```bash
-npm run build
-```
+Deploy this repository as a normal Next.js project:
 
-Type-check only:
+- Root Directory: repository root
+- Framework Preset: `Next.js`
+- Build Command: `npm run build`
+- Output Directory: leave as the Next.js default
 
-```bash
-npm run typecheck
-```
+## Source Papers
 
----
-
-## Project Structure
-
-```
-WEBGL/
-├── src/                     Game TypeScript source
-│   ├── config/              Tunable gameplay values (GameConfig.ts) and input bindings
-│   ├── core/                App bootstrap (GameApp.ts) and game state enum
-│   ├── entities/            Player, enemies, projectiles, pickups
-│   ├── game/                GameWorld orchestration and encounter loop
-│   ├── scene/               Babylon scene, materials, mesh factories, CampusBuilder
-│   ├── systems/             Input, combat, camera, collision, audio, UI, effects
-│   ├── types/               Shared gameplay types (GameTypes.ts)
-│   └── utils/               Math helpers
-├── docs/                    Seminar paper (.docx) and WebGL capability showcase (.pptx)
-├── references/              4 research PDFs (MPIP master plan + WebGL papers)
-│   ├── MPIP_11x17 Final_071220_reduced.pdf
-│   ├── 3D_ITS_campus_on_the_web_A_WebGL_implementation.pdf
-│   ├── 3D_geographic_scenes_visualization_based_on_WebGL.pdf
-│   └── Design_of_a_2D_and_3D_Situation_Display_Platform_Based_on_WebGL_and_Modern_Web_Technology_Stack.pdf
-├── webgl-showcase/          Standalone HTML showcase labs (city-roaming, situation-display)
-├── dist/                    Production build output (generated)
-├── index.html               Vite entry point
-├── package.json
-├── vite.config.ts
-├── tsconfig.json
-├── AGENTS.md                AI agent workflow rules
-└── README.md
-```
-
----
-
-## Controls (Paper Plane Assault & Campus Explore)
-
-| Key | Action |
-|---|---|
-| `W` / `S` | Accelerate / Decelerate |
-| `A` / `D` | Turn left / right |
-| `Mouse` / `↑↓` | Pitch aim |
-| `Space` | Fire paper-dot gun |
-| `Shift` | Boost |
-| `Q` or `E` | Launch pencil missile |
-| `Esc` | Pause / Resume |
-| `R` | Restart |
-
----
-
-## Game Modes
-
-### 🏛️ Explore Campus
-Peaceful flight over a 3D model of the CSUCI campus, derived from the MPIP Master Plan PDF. No enemies, no damage. Fly through the University Mall, past the Bell Tower, over the Campus Green, and around Broome Library.
-
-### ✈️ Paper Plane Assault
-Full combat experience. Fight through 6 waves of paper enemies (Foldling, Dart, Glider, Boss Kite) using paper-dot rapid fire and homing pencil missiles. Reach the south campus finish gate to win.
-
-### 🏙️ City Roaming Lab *(webgl-showcase)*
-Navigate a generated city while the renderer reports visible buildings, culled geometry, tile cache state, and predicted prefetch targets.
-
-### 📡 Situation Display Lab *(webgl-showcase)*
-A simulated data stream drives a WebGL terrain view, synchronized 2D map, entity tracks, layer controls, and replay timeline.
-
----
-
-## Campus Architecture (from MPIP PDF)
-
-The 3D campus environment is derived from the California State University Channel Islands **Master Plan Implementation Program (MPIP)**:
-
-- **Style**: Spanish California Mission Revival
-- **Colors**: Beige/cream stucco walls, terra cotta red clay tile roofs
-- **Key Landmarks**: Bell Tower (center), Broome Library (south), University Mall (spine)
-- **Flight Path**: North Entrance → University Mall → Campus Green → Bell Tower → Broome Library → South Finish Gate
-
----
-
-## Architecture
-
-`GameApp` owns the Babylon engine, input, audio, UI, and routing state machine (`menu → title → playing → paused/victory/gameOver`). `GameWorld` orchestrates the active scene: player, weapons, wave spawning, enemies, projectiles, pickups, collision, effects, and camera — in explicit update order.
-
-Two modes are supported via `GameWorld.setMode()`:
-- **`combat`**: enemies spawn, damage is enabled, victory condition is active
-- **`exploration`**: no wave spawning, player is invincible, free-fly
-
----
-
-## Adding Content
-
-**New enemy**: Extend `EnemyKind` in `GameTypes.ts` → add config in `GameConfig.enemies` → add mesh in `createEnemyMesh` → add to `wavePlan` in `GameWorld`.
-
-**New weapon**: Add config in `GameConfig.weapons` → create projectile entity → wire through `WeaponSystem` → handle damage in `GameWorld.handleCollisions`.
-
-**New campus building**: Add a helper in `CampusBuilder.ts` → place it in `createMapObjects()` → register matching `CollisionBody` spheres.
-
----
-
-## Performance
-
-Tuned for laptop browsers: low-poly meshes, capped projectile/effect counts (80/60/90), spherical collision, limited lights. Avoid per-frame allocations in hot loops.
-
----
-
-## Research References
-
-| Paper | Key Topic |
-|---|---|
-| MPIP Master Plan | CSUCI campus layout, architecture, and design standards |
-| 3D ITS Campus on the Web | Browser WebGL campus models, camera modes, usability |
-| 3D Geographic Scenes | glTF, frustum culling, prefetching — 36fps benchmark |
-| 2D/3D Situation Display | SOA, WebGL2, Cesium, real-time data linkage |
+1. A. Yuniarti, A. Atminanto, A. Mardasatria, R. R. Hariadi, and N. Suciati, "3D ITS Campus on the Web: A WebGL Implementation," 2015.
+2. R. Miao, J. Song, and Y. Zhu, "3D Geographic Scenes Visualization Based on WebGL," 2017.
+3. Y. Yang, "Design of a 2D and 3D Situation Display Platform Based on WebGL and Modern Web Technology Stack," 2024.
