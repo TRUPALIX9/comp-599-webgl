@@ -22,9 +22,9 @@ const SLIDES: SlideContent[] = [
     title: "Super-Compute Visualization",
     description: "WebGL handles massive data sets by processing millions of operations per second directly on the GPU, enabling complex particle simulations and cinematic effects.",
     bullets: [
-      "25,000+ dynamic particles",
-      "Perlin-noise flow fields",
-      "Real-time turbulence physics",
+      "30,000 GPU-rendered points",
+      "Single BufferGeometry draw call",
+      "Continuous scene rotation",
       "High-fidelity visual depth"
     ]
   },
@@ -46,7 +46,7 @@ const SLIDES: SlideContent[] = [
     title: "Why WebGL? CPU vs GPU",
     description: "Parallel processing allows the GPU to handle thousands of complex calculations simultaneously, far exceeding CPU capabilities for graphics.",
     bullets: [
-      "16,000+ points at 60 FPS",
+      "1,500-vertex icosphere point cloud",
       "Parallel vertex processing",
       "Zero-latency interaction",
       "Low CPU overhead"
@@ -61,19 +61,19 @@ const SLIDES: SlideContent[] = [
       "Compact binary GLB files",
       "PBR Material support",
       "Embedded textures",
-      "Animation mixers"
+      "Auto-centred with Box3 bounds"
     ]
   },
   {
     key: "highway",
     kicker: "05. Application A",
     title: "Highway Driving Simulation",
-    description: "Experience a real-time driving simulation. Use WASD or Arrow Keys to steer the Dodge Challenger through an infinite highway environment.",
+    description: "Experience a real-time driving simulation. Use A/D or the Left/Right Arrow Keys to steer the Dodge Challenger through an infinite highway environment.",
     bullets: [
       "Infinite highway scrolling",
       "Real-time keyboard steering",
       "Asset looping techniques",
-      "Physics-based wheel rotation"
+      "Eased steering with edge clamping"
     ]
   },
   {
@@ -84,7 +84,7 @@ const SLIDES: SlideContent[] = [
     bullets: [
       "Raycaster-based shooting",
       "Mouse-look FPS controls",
-      "Animation state blending",
+      "Camera-mounted rifle model",
       "Dynamic scene lighting"
     ]
   }
@@ -98,8 +98,13 @@ const EQUATIONS = [
   { id: "orbit3d", label: "3-Axis Orbit", math: "Parametric [sin(t), cos(1.5t), sin(0.5t)]" }
 ];
 
-export default function Showcase() {
-  const [slideIndex, setSlideIndex] = useState(0);
+type ShowcaseProps = {
+  /** Slide to open on. "menu" (the home route) opens on the first slide. */
+  initialActive?: SlideKey | "menu";
+};
+
+export default function Showcase({ initialActive = "menu" }: ShowcaseProps) {
+  const [slideIndex, setSlideIndex] = useState(() => Math.max(0, SLIDES.findIndex((s) => s.key === initialActive)));
   const [selectedEq, setSelectedEq] = useState("sin2d");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const currentSlide = SLIDES[slideIndex];
@@ -137,8 +142,8 @@ export default function Showcase() {
           
           {currentSlide.key === "chart" && (
             <div className="eqSelector">
-              <label>Select Equation:</label>
-              <select value={selectedEq} onChange={(e) => setSelectedEq(e.target.value)}>
+              <label htmlFor="eq-select">Select Equation:</label>
+              <select id="eq-select" value={selectedEq} onChange={(e) => setSelectedEq(e.target.value)}>
                 {EQUATIONS.map(eq => (
                   <option key={eq.id} value={eq.id}>{eq.label}</option>
                 ))}
@@ -161,7 +166,7 @@ export default function Showcase() {
       </div>
 
       <div className="pptStage">
-        <canvas ref={canvasRef} />
+        <canvas ref={canvasRef} role="img" aria-label={`${currentSlide.title}: interactive WebGL scene`} />
         
         {currentSlide.key === "chart" && (
           <>
@@ -241,7 +246,7 @@ function createChartRenderer(canvas: HTMLCanvasElement, eqId: string) {
 
   const createLine = (pts: THREE.Vector3[], color: number) => {
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    return new THREE.Line(geo, new THREE.LineBasicMaterial({ color, linewidth: 3 }));
+    return new THREE.Line(geo, new THREE.LineBasicMaterial({ color }));
   };
 
   scene.add(createLine([new THREE.Vector3(-22,0,0), axes.x], 0xcc0000));
@@ -254,11 +259,19 @@ function createChartRenderer(canvas: HTMLCanvasElement, eqId: string) {
   if (eqId === "sin2d") { for (let x = -15; x <= 15; x += 0.1) pts.push(new THREE.Vector3(x, Math.sin(x) * 5, 0)); color = 0x007766; }
   else if (eqId === "cos2d") { for (let x = -15; x <= 15; x += 0.1) pts.push(new THREE.Vector3(x, Math.cos(x) * 5, 0)); color = 0x0055aa; }
   else if (eqId === "spiral3d") { for (let t = -10; t <= 10; t += 0.1) pts.push(new THREE.Vector3(Math.cos(t * 2) * 5, t, Math.sin(t * 2) * 5)); color = 0x886600; }
-  else if (eqId === "wave3d") { for (let x = -10; x <= 10; x += 0.5) for (let z = -10; z <= 10; z += 0.5) pts.push(new THREE.Vector3(x, Math.sin(Math.sqrt(x*x + z*z)) * 3, z)); }
+  else if (eqId === "wave3d") {
+    // One line per x-row, so the end of a row is not joined to the start of the next.
+    for (let x = -10; x <= 10; x += 0.5) {
+      const row: THREE.Vector3[] = [];
+      for (let z = -10; z <= 10; z += 0.5) row.push(new THREE.Vector3(x, Math.sin(Math.sqrt(x*x + z*z)) * 3, z));
+      scene.add(createLine(row, color));
+    }
+  }
   else if (eqId === "orbit3d") { for (let t = 0; t <= Math.PI * 4; t += 0.05) pts.push(new THREE.Vector3(Math.sin(t) * 8, Math.cos(t * 1.5) * 8, Math.sin(t * 0.5) * 8)); color = 0xaa0088; }
 
   const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
-  const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color, linewidth: 5 }));
+  // WebGL ignores LineBasicMaterial.linewidth (lines are always 1px), so it is not set.
+  const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color }));
   scene.add(line);
 
   const updateLabels = () => {
@@ -328,13 +341,24 @@ function createHighwayRenderer(canvas: HTMLCanvasElement) {
   const { renderer, scene, camera, resize } = setupThree(canvas, 0x1a2b3c);
   camera.position.set(0, 20, -75);
   camera.lookAt(0, 0, 100);
+  // environment-highway.glb is authored along +X, about 2,900 units from the origin, so scaling it
+  // in place put it beyond the camera's far plane and only the car was visible. Each tile is turned
+  // to run along Z and scaled so one four-lane carriageway spans the car's steering range, with
+  // that carriageway centred on x = 0 at wheel height.
+  const ROAD_SCALE = 0.1;
+  const TILE = 404.8; // tile length along Z: 4,047.7 model units x ROAD_SCALE
   const loader = new GLTFLoader();
   const envs: THREE.Group[] = [];
   loader.load("/models/environment-highway.glb", (gltf) => {
+    const road = gltf.scene;
+    road.rotation.y = -Math.PI / 2;
+    road.scale.setScalar(ROAD_SCALE);
+    // carriageway centre (model z 3082) to x = 0, road surface (model y 2.4) to the tyres, tile start (model x -263) to z = 0
+    road.position.set(308.2, -2.33, 26.3);
     for (let i = 0; i < 3; i++) {
-      const env = gltf.scene.clone();
-      env.scale.set(3, 1, 3);
-      env.position.set(0, -0.1, i * 200);
+      const env = new THREE.Group();
+      env.add(i === 0 ? road : road.clone());
+      env.position.z = (i - 0.25) * TILE;
       scene.add(env);
       envs.push(env);
     }
@@ -351,7 +375,7 @@ function createHighwayRenderer(canvas: HTMLCanvasElement) {
   let targetX = 0;
   let animId: number;
   const animate = () => {
-    envs.forEach(env => { env.position.z -= 2.5; if (env.position.z < -200) env.position.z += 600; });
+    envs.forEach(env => { env.position.z -= 2.5; if (env.position.z < -TILE - 60) env.position.z += TILE * 3; });
     if (car) {
       if (keys["a"] || keys["arrowleft"]) targetX += 0.35;
       if (keys["d"] || keys["arrowright"]) targetX -= 0.35;
@@ -388,8 +412,10 @@ function createBunkerRenderer(canvas: HTMLCanvasElement) {
   scene.add(headlamp);
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
+  // Mouse-look and shooting are scoped to the canvas so the sidebar (Back/Next) stays inert.
   const onMove = (e: PointerEvent) => {
-    const x = (e.clientX / window.innerWidth) * 2 - 1; const y = -(e.clientY / window.innerHeight) * 2 + 1;
+    const rect = canvas.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1; const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     camera.rotation.y = -x * 0.8; camera.rotation.x = y * 0.4;
   };
   const onShoot = () => {
@@ -400,7 +426,7 @@ function createBunkerRenderer(canvas: HTMLCanvasElement) {
       if (idx !== -1 && ballData[idx].popping === 0) ballData[idx].popping = 1;
     }
   };
-  window.addEventListener("pointermove", onMove); window.addEventListener("pointerdown", onShoot);
+  canvas.addEventListener("pointermove", onMove); canvas.addEventListener("pointerdown", onShoot);
   let animId: number;
   const animate = (time: number) => {
     ballData.forEach((d, i) => {
@@ -411,12 +437,14 @@ function createBunkerRenderer(canvas: HTMLCanvasElement) {
       } else { mesh.position.y = 1.0 + Math.sin(time * 0.003 + i) * 0.2; }
     });
     if (rifle) {
-      const weaponPos = new THREE.Vector3(0.5, -0.6, -0.9);
+      // The model's muzzle points along +X, so a quarter turn aims it down the view (-Z). The offset
+      // keeps it in the lower-right of the frame; the old (0.5, -0.6, -0.9) sat below the view.
+      const weaponPos = new THREE.Vector3(0.22, -0.24, -0.5);
       weaponPos.applyQuaternion(camera.quaternion); weaponPos.add(camera.position);
-      rifle.position.copy(weaponPos); rifle.quaternion.copy(camera.quaternion); rifle.rotateY(Math.PI);
+      rifle.position.copy(weaponPos); rifle.quaternion.copy(camera.quaternion); rifle.rotateY(Math.PI / 2);
     }
     headlamp.position.copy(camera.position); renderer.render(scene, camera); animId = requestAnimationFrame(animate);
   };
   animate(0);
-  return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerdown", onShoot); window.removeEventListener("resize", resize); cancelAnimationFrame(animId); renderer.dispose(); };
+  return () => { canvas.removeEventListener("pointermove", onMove); canvas.removeEventListener("pointerdown", onShoot); window.removeEventListener("resize", resize); cancelAnimationFrame(animId); renderer.dispose(); };
 }
