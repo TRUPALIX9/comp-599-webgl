@@ -246,7 +246,7 @@ function createChartRenderer(canvas: HTMLCanvasElement, eqId: string) {
 
   const createLine = (pts: THREE.Vector3[], color: number) => {
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    return new THREE.Line(geo, new THREE.LineBasicMaterial({ color, linewidth: 3 }));
+    return new THREE.Line(geo, new THREE.LineBasicMaterial({ color }));
   };
 
   scene.add(createLine([new THREE.Vector3(-22,0,0), axes.x], 0xcc0000));
@@ -259,11 +259,19 @@ function createChartRenderer(canvas: HTMLCanvasElement, eqId: string) {
   if (eqId === "sin2d") { for (let x = -15; x <= 15; x += 0.1) pts.push(new THREE.Vector3(x, Math.sin(x) * 5, 0)); color = 0x007766; }
   else if (eqId === "cos2d") { for (let x = -15; x <= 15; x += 0.1) pts.push(new THREE.Vector3(x, Math.cos(x) * 5, 0)); color = 0x0055aa; }
   else if (eqId === "spiral3d") { for (let t = -10; t <= 10; t += 0.1) pts.push(new THREE.Vector3(Math.cos(t * 2) * 5, t, Math.sin(t * 2) * 5)); color = 0x886600; }
-  else if (eqId === "wave3d") { for (let x = -10; x <= 10; x += 0.5) for (let z = -10; z <= 10; z += 0.5) pts.push(new THREE.Vector3(x, Math.sin(Math.sqrt(x*x + z*z)) * 3, z)); }
+  else if (eqId === "wave3d") {
+    // One line per x-row, so the end of a row is not joined to the start of the next.
+    for (let x = -10; x <= 10; x += 0.5) {
+      const row: THREE.Vector3[] = [];
+      for (let z = -10; z <= 10; z += 0.5) row.push(new THREE.Vector3(x, Math.sin(Math.sqrt(x*x + z*z)) * 3, z));
+      scene.add(createLine(row, color));
+    }
+  }
   else if (eqId === "orbit3d") { for (let t = 0; t <= Math.PI * 4; t += 0.05) pts.push(new THREE.Vector3(Math.sin(t) * 8, Math.cos(t * 1.5) * 8, Math.sin(t * 0.5) * 8)); color = 0xaa0088; }
 
   const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
-  const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color, linewidth: 5 }));
+  // WebGL ignores LineBasicMaterial.linewidth (lines are always 1px), so it is not set.
+  const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color }));
   scene.add(line);
 
   const updateLabels = () => {
