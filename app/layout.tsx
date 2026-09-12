@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "COMP 599 WebGL Showcase",
-  description: "Integrated WebGL capability showcase for the COMP 599 research presentation."
+  title: "WebGL Academic Presentation",
+  description: "Six live Three.js slides for a WebGL seminar (COMP 599 research presentation)."
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
