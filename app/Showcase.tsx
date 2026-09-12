@@ -22,9 +22,9 @@ const SLIDES: SlideContent[] = [
     title: "Super-Compute Visualization",
     description: "WebGL handles massive data sets by processing millions of operations per second directly on the GPU, enabling complex particle simulations and cinematic effects.",
     bullets: [
-      "25,000+ dynamic particles",
-      "Perlin-noise flow fields",
-      "Real-time turbulence physics",
+      "30,000 GPU-rendered points",
+      "Single BufferGeometry draw call",
+      "Continuous scene rotation",
       "High-fidelity visual depth"
     ]
   },
@@ -46,7 +46,7 @@ const SLIDES: SlideContent[] = [
     title: "Why WebGL? CPU vs GPU",
     description: "Parallel processing allows the GPU to handle thousands of complex calculations simultaneously, far exceeding CPU capabilities for graphics.",
     bullets: [
-      "16,000+ points at 60 FPS",
+      "1,500-vertex icosphere point cloud",
       "Parallel vertex processing",
       "Zero-latency interaction",
       "Low CPU overhead"
@@ -61,19 +61,19 @@ const SLIDES: SlideContent[] = [
       "Compact binary GLB files",
       "PBR Material support",
       "Embedded textures",
-      "Animation mixers"
+      "Auto-centred with Box3 bounds"
     ]
   },
   {
     key: "highway",
     kicker: "05. Application A",
     title: "Highway Driving Simulation",
-    description: "Experience a real-time driving simulation. Use WASD or Arrow Keys to steer the Dodge Challenger through an infinite highway environment.",
+    description: "Experience a real-time driving simulation. Use A/D or the Left/Right Arrow Keys to steer the Dodge Challenger through an infinite highway environment.",
     bullets: [
       "Infinite highway scrolling",
       "Real-time keyboard steering",
       "Asset looping techniques",
-      "Physics-based wheel rotation"
+      "Eased steering with edge clamping"
     ]
   },
   {
@@ -84,7 +84,7 @@ const SLIDES: SlideContent[] = [
     bullets: [
       "Raycaster-based shooting",
       "Mouse-look FPS controls",
-      "Animation state blending",
+      "Camera-mounted rifle model",
       "Dynamic scene lighting"
     ]
   }
