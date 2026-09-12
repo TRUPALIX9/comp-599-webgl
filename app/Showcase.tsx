@@ -98,8 +98,13 @@ const EQUATIONS = [
   { id: "orbit3d", label: "3-Axis Orbit", math: "Parametric [sin(t), cos(1.5t), sin(0.5t)]" }
 ];
 
-export default function Showcase() {
-  const [slideIndex, setSlideIndex] = useState(0);
+type ShowcaseProps = {
+  /** Slide to open on. "menu" (the home route) opens on the first slide. */
+  initialActive?: SlideKey | "menu";
+};
+
+export default function Showcase({ initialActive = "menu" }: ShowcaseProps) {
+  const [slideIndex, setSlideIndex] = useState(() => Math.max(0, SLIDES.findIndex((s) => s.key === initialActive)));
   const [selectedEq, setSelectedEq] = useState("sin2d");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const currentSlide = SLIDES[slideIndex];
