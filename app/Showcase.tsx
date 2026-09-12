@@ -437,9 +437,11 @@ function createBunkerRenderer(canvas: HTMLCanvasElement) {
       } else { mesh.position.y = 1.0 + Math.sin(time * 0.003 + i) * 0.2; }
     });
     if (rifle) {
-      const weaponPos = new THREE.Vector3(0.5, -0.6, -0.9);
+      // The model's muzzle points along +X, so a quarter turn aims it down the view (-Z). The offset
+      // keeps it in the lower-right of the frame; the old (0.5, -0.6, -0.9) sat below the view.
+      const weaponPos = new THREE.Vector3(0.22, -0.24, -0.5);
       weaponPos.applyQuaternion(camera.quaternion); weaponPos.add(camera.position);
-      rifle.position.copy(weaponPos); rifle.quaternion.copy(camera.quaternion); rifle.rotateY(Math.PI);
+      rifle.position.copy(weaponPos); rifle.quaternion.copy(camera.quaternion); rifle.rotateY(Math.PI / 2);
     }
     headlamp.position.copy(camera.position); renderer.render(scene, camera); animId = requestAnimationFrame(animate);
   };
