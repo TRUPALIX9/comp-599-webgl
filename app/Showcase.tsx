@@ -341,13 +341,24 @@ function createHighwayRenderer(canvas: HTMLCanvasElement) {
   const { renderer, scene, camera, resize } = setupThree(canvas, 0x1a2b3c);
   camera.position.set(0, 20, -75);
   camera.lookAt(0, 0, 100);
+  // environment-highway.glb is authored along +X, about 2,900 units from the origin, so scaling it
+  // in place put it beyond the camera's far plane and only the car was visible. Each tile is turned
+  // to run along Z and scaled so one four-lane carriageway spans the car's steering range, with
+  // that carriageway centred on x = 0 at wheel height.
+  const ROAD_SCALE = 0.1;
+  const TILE = 404.8; // tile length along Z: 4,047.7 model units x ROAD_SCALE
   const loader = new GLTFLoader();
   const envs: THREE.Group[] = [];
   loader.load("/models/environment-highway.glb", (gltf) => {
+    const road = gltf.scene;
+    road.rotation.y = -Math.PI / 2;
+    road.scale.setScalar(ROAD_SCALE);
+    // carriageway centre (model z 3082) to x = 0, road surface (model y 2.4) to the tyres, tile start (model x -263) to z = 0
+    road.position.set(308.2, -2.33, 26.3);
     for (let i = 0; i < 3; i++) {
-      const env = gltf.scene.clone();
-      env.scale.set(3, 1, 3);
-      env.position.set(0, -0.1, i * 200);
+      const env = new THREE.Group();
+      env.add(i === 0 ? road : road.clone());
+      env.position.z = (i - 0.25) * TILE;
       scene.add(env);
       envs.push(env);
     }
@@ -364,7 +375,7 @@ function createHighwayRenderer(canvas: HTMLCanvasElement) {
   let targetX = 0;
   let animId: number;
   const animate = () => {
-    envs.forEach(env => { env.position.z -= 2.5; if (env.position.z < -200) env.position.z += 600; });
+    envs.forEach(env => { env.position.z -= 2.5; if (env.position.z < -TILE - 60) env.position.z += TILE * 3; });
     if (car) {
       if (keys["a"] || keys["arrowleft"]) targetX += 0.35;
       if (keys["d"] || keys["arrowright"]) targetX -= 0.35;
