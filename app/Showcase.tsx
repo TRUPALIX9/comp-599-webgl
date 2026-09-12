@@ -142,8 +142,8 @@ export default function Showcase({ initialActive = "menu" }: ShowcaseProps) {
           
           {currentSlide.key === "chart" && (
             <div className="eqSelector">
-              <label>Select Equation:</label>
-              <select value={selectedEq} onChange={(e) => setSelectedEq(e.target.value)}>
+              <label htmlFor="eq-select">Select Equation:</label>
+              <select id="eq-select" value={selectedEq} onChange={(e) => setSelectedEq(e.target.value)}>
                 {EQUATIONS.map(eq => (
                   <option key={eq.id} value={eq.id}>{eq.label}</option>
                 ))}
@@ -166,7 +166,7 @@ export default function Showcase({ initialActive = "menu" }: ShowcaseProps) {
       </div>
 
       <div className="pptStage">
-        <canvas ref={canvasRef} />
+        <canvas ref={canvasRef} role="img" aria-label={`${currentSlide.title}: interactive WebGL scene`} />
         
         {currentSlide.key === "chart" && (
           <>
