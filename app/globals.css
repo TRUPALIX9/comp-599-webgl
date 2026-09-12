@@ -976,6 +976,7 @@ input[type="range"] {
 .eqSelector select option {
   background: #0a0c0e;
   color: #ffffff;
+}
 
 .axisLabels {
   position: absolute;
