@@ -772,3 +772,43 @@ button {
   font-size: 16px;
   font-weight: 900;
 }
+
+/* Narrow screens: stack the sidebar above a 60vh stage instead of a fixed 400px column. */
+@media (max-width: 900px) {
+  .pptSplit {
+    height: auto;
+    min-height: 100vh;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 60vh;
+    overflow: visible;
+  }
+
+  .pptSidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 28px 22px;
+  }
+
+  .slideTitle {
+    font-size: 26px;
+  }
+
+  .slideDesc {
+    margin-bottom: 22px;
+  }
+
+  .pptNav {
+    margin-top: 24px;
+    padding-top: 20px;
+  }
+
+  .chartLegend {
+    top: 14px;
+    max-width: calc(100% - 28px);
+    padding: 10px 16px;
+  }
+
+  .legendMath {
+    font-size: 13px;
+  }
+}
