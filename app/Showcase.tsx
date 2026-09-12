@@ -393,8 +393,10 @@ function createBunkerRenderer(canvas: HTMLCanvasElement) {
   scene.add(headlamp);
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
+  // Mouse-look and shooting are scoped to the canvas so the sidebar (Back/Next) stays inert.
   const onMove = (e: PointerEvent) => {
-    const x = (e.clientX / window.innerWidth) * 2 - 1; const y = -(e.clientY / window.innerHeight) * 2 + 1;
+    const rect = canvas.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1; const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     camera.rotation.y = -x * 0.8; camera.rotation.x = y * 0.4;
   };
   const onShoot = () => {
@@ -405,7 +407,7 @@ function createBunkerRenderer(canvas: HTMLCanvasElement) {
       if (idx !== -1 && ballData[idx].popping === 0) ballData[idx].popping = 1;
     }
   };
-  window.addEventListener("pointermove", onMove); window.addEventListener("pointerdown", onShoot);
+  canvas.addEventListener("pointermove", onMove); canvas.addEventListener("pointerdown", onShoot);
   let animId: number;
   const animate = (time: number) => {
     ballData.forEach((d, i) => {
@@ -423,5 +425,5 @@ function createBunkerRenderer(canvas: HTMLCanvasElement) {
     headlamp.position.copy(camera.position); renderer.render(scene, camera); animId = requestAnimationFrame(animate);
   };
   animate(0);
-  return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerdown", onShoot); window.removeEventListener("resize", resize); cancelAnimationFrame(animId); renderer.dispose(); };
+  return () => { canvas.removeEventListener("pointermove", onMove); canvas.removeEventListener("pointerdown", onShoot); window.removeEventListener("resize", resize); cancelAnimationFrame(animId); renderer.dispose(); };
 }
